@@ -13,6 +13,7 @@ print(line[len(line)-1]) # g
 #  - list
 #  - set
 #  - dict
+#  - bytearray
 
 
 # изменение строки через список
@@ -124,17 +125,247 @@ print(sys.getrefcount(1)) # 1000000155"""
 title = "hello"' '"my"' '"friend"
 print(title)"""
 
+# f - строки
+"""
+import datetime
+name = 'lee'
+age = 20
+money = 100000"""
+"""
+print(f'{name=}, {age=}')"""
+# name='lee', age=20
+"""
+print(f"{money=:,d}")"""
+# money=100,000
+"""today = datetime.datetime.now()"""
+"""
+print(f"{today:%Y-%m-%d %H:%M:%S}")"""
+# 2023-09-02 08:44:4
+"""from math import pi
+b = 202020"""
+"""
+print(f"{pi:.3f}")"""
+# 3.142
+"""
+print(f'{b:*^20,d}')"""
+# ******202,020*******
+"""
+perc = 35/64
+print(f'{perc:.2%}')"""
+# 54.69%
+"""
+greetings = 'hello'
+print(f'{greetings:>10}')"""
+#      hello
+"""
+print(f'{greetings:<10}friend')"""
+# hello     friend
+"""
+big_num = 1000000004
+print(f'{big_num:,}')"""
+# 1,000,000,004
+"""
+num = 2343552.6516251625
+print(f"{num:,.3f}")"""
+# '2,343,552.652'
 
+# dict
+# ключи словаря уникальны и поддерживают те же методы, что и множества
+"""
+dict_1 = {key: value for key,value in zip(['a','b','c'],[1,2,3])}
+dict_2 = {key: value for key,value in zip(['a','b','c','d'],[1,2,3,4])}
+print(dict_1.keys() & duct_2.keys())
+# результатом будет set а не dict
+dict_3 = dict_1.keys() ^ dict_2.keys()
+"""
+# при использовании операций множеств ^ & |, у словарей с вызовом метода items()
+# можно создавать новые словари
+# с учетом того что значения хэшируемые, то есть неизменяемые
+"""
+dict_1 = {key: value for key,value in zip(['a','b','c'],[1,2,3])}
+dict_2 = {key: value for key,value in zip(['a','b','c','d'],[1,2,3])}
+dict_3 = dict_1.items() ^ dict_2.items()
+print(type(dict_3))
+print(dict(dict_3))"""
 
+# именованный кортеж namedtuple
+# представляет собой гибрид кортежа/класса/словаря
+"""
+from collections import namedtuple
 
+rec = namedtuple('user',['name', 'age','jobs'])
+bob = rec('bob', 20, 'work')"""
+# можно обращаться по атрибуту
+"""print(bob.name)"""  # bob
+# по индексу
+"""print(bob[1])"""  # 20
+# можно преобразовать в словарь
+"""print(type(bob._asdict()))"""
 
+# file
+# в файл записываются только строки которые необходимо заранее преобразовать
+# переносы строк нужно прописывать вручную
+"""
+x,y,z = 10,20,30
+list = [1,2,3]
 
+f = open('datafile.txt', 'w')
+f.write((f'{x}\n{y}\n{z}\n'))
+f.write(str(list))
+a = 'asdd'
+for i in open('datafile.txt').read():
+"""
+#    strip() удаляет \n
+""" 
+    a += i.strip()
+print(a)"""
 
+"""
+line = open('datafile.txt').readline()
+print(line) """  # [1, 2, 3] является строкой
+# eval() трактует строку как объект Python
+"""
+list_python = eval(line)
+print(list_python, type(list_python))"""  # [1, 2, 3] <class 'list'>
 
+# модуль pickle
+# записывает и читает файл без предварительного преобразования в строки и использования eval()
+"""import pickle"""
+"""
+dict_ = {'name': 'lee', 'age': 20}
+f = open('datafile.pkl', 'wb')
+"""
+# picle преобразовал словарь в строку
+"""
+pickle.dump(dict_, f)"""
+"""
+f = open('datafile.pkl', 'rb')"""
+# picle преобразовал строку в словарь
+"""
+pic = pickle.load(f)
+print(type(pic), pic) """
+"""
+import copy
 
+lee = {'name':'lee', 'hobby': [1,2,3,4]}
+# метод deepcopy() создает полную копию объекта со всей его вложенности 
+bob = copy.deepcopy(lee)
+"""
 
+# сравнение
+#  == сравнивает эквивалентность значений
+# is проверяет идентичность объектов, то есть являются ли объекты на самом деле одним и тем же
+# (распологаются по одному адрессу в памяти)
+"""
+lst = [1,2,3,6]
+lst1 = [1,2,3,5]
+print(lst>lst1)
+"""
+# сравнение словарей на < / > возможно только с отсортированными ключами
+"""
+d = {'a': 1, 'b': 10}
+d1 = {'a': 1, 'b': 3}
+print(sorted(d) > sorted(d1))
+"""
 
+"""
+l = [1,2,3]"""
+# создается новый объект
+"""
+x = l * 4
+l.append(4)"""
+"""
+print(id(l), l, id(x), x)"""
+# [1, 2, 3, 4] 4543371328 [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3] 4543430080
+"""
+l = [1,2,3]
+l.append(4)"""
+# создается новый объект который содержит ссылки на созданный раннее объект
+# изменение списка L повлияет на вложенные списки у списка x
+"""
+x = [l] * 4
+print(l, id(l), x, id(x))"""
+# решение
+"""
+l = [1,2,3]"""
+# создается полностью новый объект с уникальностью во всех уровнях вложенности
+"""
+x = [list(l) for i in range(4)]
+print(l, id(l), x, id(x))
+l.append(4)"""
+"""
+print(l, id(l)) """  # [1, 2, 3, 4] 4532459584
+"""
+print(x[0], id(x[0]))"""  # [1, 2, 3] 4531972992
 
+"""
+t = (4,5,6)
+
+t1 = (1,) + t[1:]
+print(t1)"""
+"""
+l = [1,2,4,5,6,7]
+l[5] = 2
+c = l[-1: 1000]"""
+# ! IndexError: list assignment index out of range
+"""l[3:1] = '?'"""
+# [1, 2, 4, '?', 5, 6, 2]
+"""
+x = 'spam'
+y = 'eggs'
+print(x, id(x), y, id(y))"""
+# появляется кортеж (x, y)
+# затем кортеж меняет последовательность (y, x)
+"""
+x, y = y, x
+print(x, id(x), y, id(y))"""
+"""
+l = [1,2,4,5,6,7]
+c = [8, 9, 10]
+"""
+# при конкатенации списков, кортежей, множеств, строк создается новый объект
+"""
+x = l + c
+print(x, id(x))
+print(l, id(l))
+print(c, id(c))"""
+# [1, 2, 4, 5, 6, 7, 8, 9, 10] 4528366144
+# [1, 2, 4, 5, 6, 7] 4528625728
+# [8, 9, 10] 4528684480
+"""
+d = {'name': 'lee', 'age': 20}
+d1 = {'city': 'spb'}
+d2 = d | d1
+print(d2, id(d2))
+print(d, id(d))
+print(d1, id(d1))"""
+# {'name': 'lee', 'age': 20, 'city': 'spb'} 4341257280
+# {'name': 'lee', 'age': 20} 4340229632
+# {'city': 'spb'} 4340161024
+"""
+a = (1,2)
+c = (3,4)
+v = a + c
+print(a, id(a))
+print(c, id(c))
+print(v, id(v))"""
+# неупорядоченные коллекции данных не поддерживают конкатенацию, срезы, индексацию
+"""
+a = {1, 2}
+c = {3, 4}
+v = a | c
+print(a, id(a))
+print(c, id(c))
+print(v, id(v))"""
+# объедение словарей и множеств выполняется с помощью методов множеств | ^ &
+#  | - объединение
+#  ^ - разность
+#  & - пересечение
+"""
+a = {1, 2, 4}
+c = {3, 4}
+v = a & c
+print(v, id(v))"""
 
 
 

@@ -28,7 +28,6 @@ print(map_obj)"""
 # возвращает итератор кортежей ('name', 'lee'), ('age', 20)
 """dict_ = dict(zip_obj)"""
 # {'name': 'lee', 'age': 20}
-a = 10
 
 
 
