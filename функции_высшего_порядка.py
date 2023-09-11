@@ -29,17 +29,5 @@ print(map_obj)"""
 """dict_ = dict(zip_obj)"""
 # {'name': 'lee', 'age': 20}
 
-l = [1, [2, [3, 4], 5], 6, [7, 8]]
 
-def sumtree_LIFO(l):
-    tot = 0
-    items = list(l)
-    while items:
-        front = items.pop(0)
-        if not isinstance(front, list):
-            tot += front
-        else:
-            items[:0] = front
-    return tot
 
-print(sumtree_LIFO(l))
