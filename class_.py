@@ -254,22 +254,22 @@ x.delegate()"""
 """
 x = Extender()
 x.delegate()"""
-
+"""
 from abc import ABCMeta, abstractmethod
 
 
 class Super(metaclass=ABCMeta):
     def delegate(self):
         self.action()
-
-    @abstractmethod
-    def action(self):  # абстрактные методы в супер классах создаются для того чтобы все дочерние классы
-        pass           # обязательно реализовывали указанные абстрактные методы
-
-class Sub(Super):  # приведет к ошибке т.к не был создан абстрактный метод action
-    pass
-
-x = Sub()  # TypeError: Can't instantiate abstract class Sub with abstract method action
+"""
+""" @abstractmethod"""
+""" def action(self):"""  # абстрактные методы в супер классах создаются для того чтобы все дочерние классы
+"""     pass """          # обязательно реализовывали указанные абстрактные методы
+"""
+class Sub(Super):"""  # приведет к ошибке т.к не был создан абстрактный метод action
+""" pass"""
+"""
+x = Sub()"""  # TypeError: Can't instantiate abstract class Sub with abstract method action
 
 
 
