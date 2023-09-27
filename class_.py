@@ -273,4 +273,650 @@ x = Sub()"""  # TypeError: Can't instantiate abstract class Sub with abstract me
 
 
 
+# протокол свойств позваляет направлять операции извлечения,установки, удаления значений конкретного атрибута
+# в определяемые нами методами, что дает возможность вставлять логику, которая автоматически выполнится
+# при доступе к атрибуту
+class Super:
+    def __init__(self, name):
+        self._name = name
 
+    def getName(self):
+        print('fetch...')
+        return self._name
+
+    def setName(self, value):
+        print('change...')
+        self._name = value
+
+    def delName(self):
+        print('remove...')
+        del self._name
+
+    name = property(getName, setName, delName, "name property docs")  # свойство всегда требует в методе передачи self
+
+
+class Person(Super): pass  # свойства наследуются
+"""
+bob = Person('Bob smith')
+bob.name
+bob.name = 'Tom Smith'"""
+
+
+# декоратор Property
+class Person:
+    def __init__(self, name):
+        self._name = name
+
+    @property
+    def name(self):
+        print('fetch...')
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        print('change...')
+        self._name = value
+
+    @name.deleter
+    def name(self):
+        print('remove...')
+        del self._name
+"""
+bob = Person('Bob smith')
+print(bob.name)
+bob.name = 'Tom'
+"""
+
+
+# дескрипторы
+
+class Descriptor:
+    """docstring goes here"""
+    def __get__(self, instance, owner):
+        print(self, instance, owner, sep='\n')
+    def __set__(self, instance, value): pass
+    # def __delete__(self, instance): pass
+
+class Subject:
+    attr = Descriptor()
+"""
+x = Subject()
+x.attr"""
+
+
+class D:
+    def __get__(*args): print('get')
+    def __set__(*args): raise AttributeError('cannot set')
+
+class C:
+    a = D()
+"""
+x = C()
+x.a
+C.a
+x.a = 99
+print(x.a)
+print(list(x.__dict__.keys()))
+"""
+
+# альтернатива Дескриптор
+
+class Name:
+    """name descriptor docs"""
+    # self - Экземпляр class Name
+    # instance - экземпляр class Human
+    # owner - class Human
+    def __get__(self, instance, owner):
+        print('fetch...')
+        return instance._name
+
+    def __set__(self, instance, value):
+        print('change...')
+        instance._name = value
+
+    def __delete__(self, instance):
+        print('remove...')
+        del instance._name
+
+class Human:
+    def __init__(self, name):
+        self._name = name
+
+    name = Name()
+"""
+bob = Human('Bob smith')
+print(bob.name)
+bob.name = 'Tom'
+print(bob.name)
+"""
+
+
+class DescSquare:
+    def __init__(self, start):
+        self.value = start
+
+    def __get__(self, instance, owner):
+        return self.value ** 2
+
+    def __set__(self, instance, value):
+        self.value = value
+
+
+class Client1:
+    x = DescSquare(2)
+
+class Client2:
+    x = DescSquare(4)
+
+
+
+
+class DescState:  # использование состояние дескриптора
+    # self для передачи атрибута
+    def __init__(self, value):
+        self.value = value
+
+    def __get__(self, instance, owner):
+        print('DescState get')
+        return self.value ** 2
+
+    def __set__(self, instance, value):
+        print('DescState set')
+        self.value = value
+
+# клиентский класс
+class CalcAttrs:
+    x = DescState(3)  # атрибут класса дескриптора
+    y = 3  # атрибут класса
+    def __init__(self):
+        self.z = 4  # атрибут экземпляра
+
+obj = CalcAttrs()
+"""
+print(obj.x, obj.y, obj.z)"""
+
+
+# obj.x = 5  # вычисляется при извлечении, но его значение будет одинаковым для всех экземпляров класса
+           # так же как и атрибут класса Y
+# CalcAttrs.y = 6
+# obj.z = 7
+# print(obj.x, obj.y, obj.z)  # 25 6 7
+
+# obj2 = CalcAttrs()
+# print(obj2.x, obj2.y, obj2.z)  # 25 6 4
+
+
+class InstanceState:  # использование состояние экземпляра
+                      # instance
+    def __get__(self, instance, owner):
+        print('InstanceState get')
+        return instance._x
+    def __set__(self, instance, value):
+        print('InstanceState set')
+        instance._x = value
+
+
+class CalcAttrs2:
+    x = InstanceState()  # х будет вычисляться у каждого экземпляра отдельно
+    y = 3
+    def __init__(self):
+        self._x = 2
+        self.z = 4  # атрибут экземпляра
+
+"""
+obj3 = CalcAttrs2()
+print(obj3.x, obj3.y, obj3.z)"""  # 2 3 4
+"""
+obj3.x = 5  
+CalcAttrs2.y = 6
+obj.z = 7
+print(obj3.x, obj3.y, obj3.z)"""  # 5 6 4
+"""
+obj4 = CalcAttrs2()
+print(obj4.x, obj4.y, obj4.z)"""  # 2 6 4
+
+
+# может использоваться сразу оба состояние атрибута в self.data и instance.data
+
+class DescBoth:
+    def __init__(self, data):
+        self.data = data
+    def __get__(self, instance, owner):
+        return f"{self.data}, {instance.data}"
+    def __set__(self, instance, value):
+        instance.data = value
+
+class Client:
+    def __init__(self, data):
+        self.data = data
+
+    managed = DescBoth('spam')
+
+"""
+i = Client('eggs')
+print(i.managed)"""  # spam, eggs
+"""
+i.managed = 'SPAM'
+print(i.managed)"""
+"""
+print(i.__dict__)"""  # не видны атрибуты дескриптора
+"""
+print([x for x in dir(i) if not x.startswith('__')])"""  # dir() ['data', 'managed']
+
+
+
+class Property:
+    def __init__(self, fget=None, fset=None, fdel=None, doc=None):
+        self.fget = fget
+        self.fset = fset
+        self.fdel = fdel
+
+    def __get__(self, instance, instancetype=None):
+        if instance is None:
+            return self
+        if self.fget is None:
+            raise AttributeError('cant get attribute')
+        return self.fget(instance)
+
+    def __set__(self, instance, value):
+        if self.fset is None:
+            raise AttributeError('cant set attribute')
+        self.fset(instance, value)
+
+    def __delete__(self, instance):
+        if self.fdel is None:
+            raise AttributeError('cant delete attribute')
+        self.fdel(instance)
+
+
+class Person4:
+    def getName(self): print('get Name ...', 4)
+    def setName(self): print('set Name ...')
+    name = Property(getName, setName)
+"""
+x = Person4()
+x.name"""
+
+
+#  __getattr__  __getattribute__
+# применяются для перехвата операции любого атрибута экземпляра,
+# а не только конкретного имени как свойство или дескрипторы
+
+
+def __getattr__(self, name): pass  # при извлечении неопределенных атрибутов obj.name
+def __getattribute__(self, name): pass  # при извлечении всех атрибутов obj.name
+def __setattr__(self, name): pass  # при присваивании всех атрибутов
+def __delattr__(self, name): pass # при удалении всех атрибутов
+
+# делегирование
+
+class Wrapper:
+    def __init__(self, obj):
+        self.obj = obj
+    def __getattr__(self, item):
+        print(f'Trace: {item}')
+        return getattr(self.obj, item)
+
+    def __setattr__(self, key, value):
+        print('__setattr__')
+        object.__setattr__(self, key, value)
+"""
+x = Wrapper([1,2,3,4])
+x.append(5)
+x.obj = 'aqwer'
+print(x.obj)"""  # [1, 2, 3, 4, 5]
+
+
+# извлечение, установка и удаление с помощью
+# __getattr__, __setattr__, __delattr__
+
+
+class Person1:
+    def __init__(self, name):
+        self._name = name
+
+    def __getattr__(self, attr):
+        print(f'__getattr__: {attr}')
+        if attr == 'name':
+            return self._name
+        raise AttributeError(attr)
+
+    def __setattr__(self, attr, value):
+        print(f"__setattr__: {attr}, {value}")
+        if attr == 'name':
+            attr = '_name'
+        object.__setattr__(self, attr, value)
+
+    def __delattr__(self, attr):
+        print(f"__delattr__ {attr}")
+        if attr == 'name':
+            attr = '_name'
+        object.__delattr__(self, attr)
+
+"""
+bob = Person1('Bob Smith')"""  # __setattr__: _name, Bob Smith
+"""
+bob.name """  # __getattr__: name
+
+class PropertySquare:
+    def __init__(self, start):
+        self.value = start
+
+    @property
+    def x(self):
+        return self.value ** 2
+    @x.setter
+    def x(self, value2):
+        self.value = value2
+"""
+x = PropertySquare(2)
+print(x.x)
+x.x = 10
+print(x.x)
+"""
+
+class AttrSquare:
+    def __init__(self, start):
+        self.value = start
+
+    def __getattr__(self, attr):
+        if attr == 'x':
+            return self.value ** 2
+        raise AttributeError(attr)
+
+    def __setattr__(self, attr, value):
+        if attr == 'x':
+            attr = 'value'
+        return object.__setattr__(self, attr, value)
+"""
+a = AttrSquare(3)
+b = AttrSquare(4)
+print(a.x)
+a.x = 10
+print(a.x)
+"""
+
+# динамически вычисляемые атрибуты, реализованные с помощью свойств
+
+class Powers:
+    def __init__(self, square, cube):
+        self._square = square
+        self._cube = cube
+
+    def get_square(self):
+        return self._square ** 2
+
+    def set_square(self, value):
+        self._square = value
+
+    square = property(get_square, set_square)
+
+    def get_cube(self):
+        return self._cube ** 3
+
+    cube = property(get_cube)
+
+"""
+x = Powers(3,4)
+print('Property')
+print(x.get_square()) """  # 3
+"""
+x.square = 5
+print(x.get_square()) """  # 25
+"""
+print(x.get_cube())"""  # 64
+"""
+print('-' * 20)"""
+
+# динамически вычисляемые атрибуты, реализованные с помощью дескрипторов
+
+class DescSquare1:
+    def __get__(self, instance, owner):
+        return instance.square ** 2
+
+    def __set__(self, instance, value):
+        instance.square = value
+
+class DescCube(DescSquare1):
+     def __get__(self, instance, owner):
+         return instance.cube ** 3
+
+class Power1:
+    square = DescSquare1()
+    cube = DescCube()
+    def __init__(self, square, cube):
+        self._square = square
+        self._cube = cube
+"""
+x = Powers(3,4)
+print('Descriptor')
+print(x.get_square())"""  # 3
+"""
+x.square = 5
+print(x.get_square())"""  # 25
+"""
+print(x.get_cube())"""  # 64
+"""
+print('-' * 20)"""
+
+
+# свойства
+
+
+def printer_holder(who):
+    print(f'{who.__class__.__name__}:', who.acct, who.name, who.age, who.remain, who.addr, sep=' / ')
+
+
+def test(class_):
+    bob = class_('1234-5678', 'Bob Smith', 40, '123 main st')
+    printer_holder(bob)
+
+
+class CardHolder:
+    acct_len = 8
+    retire_age = 59.5
+
+    def __init__(self, acct, name, age, addr):
+        self.acct = acct
+        self.name = name
+        self.age = age
+        self.addr = addr
+
+    def get_name(self):
+        return self.__name
+
+    def set_name(self, value):
+        value = value.lower().replace(' ', '_')
+        self.__name = value
+
+    name = Property(get_name, set_name)
+
+    def get_age(self):
+        return self.__age
+
+    def set_age(self, value):
+        if 0 > value > 150:
+            raise ValueError('INVALID AGE')
+        self.__age = value
+
+    age = Property(get_age, set_age)
+
+    def get_acct(self):
+        return self.__acct
+
+    def set_acct(self, value):
+        value = value.replace('-', '')
+        if len(value) != self.acct_len:
+            raise TypeError('INVALID ACCT NUMBER')
+        value = value[:-3] + '***'
+        self.__acct = value
+
+    acct = Property(get_acct, set_acct)
+
+    def remain_get(self):
+        return self.retire_age - self.age
+    # remain виртуальный атрибут, вычисляется по запросу
+    remain = Property(remain_get)
+
+
+# test(CardHolder)
+
+
+# дескрипторы
+# разделяемое состояние атрибуты создаются в дескрипторе по средствам self
+# это значит что изменение атрибута в одном экземпляре изменит его и в другом
+class CardHolder2:
+    acct_len = 8
+    retire_age = 59.5
+
+    def __init__(self, acct, name, age, addr):
+        self.acct = acct
+        self.name = name
+        self.age = age
+        self.addr = addr
+
+    class Name:
+        def __get__(self, instance, owner):
+            return self.name
+
+        def __set__(self, instance, value):
+            value = value.lower().replace(' ', '_')
+            self.name = value
+    name = Name()
+
+    class Age:
+        def __get__(self, instance, owner):
+            return self.age
+
+        def __set__(self, instance, value):
+            if 0 > value > 150:
+                raise ValueError('INVALID AGE')
+            self.age = value
+    age = Age()
+
+    class Acct:
+        def __get__(self, instance, owner):
+            return self.acct
+
+        def __set__(self, instance, value):
+            value = value.replace('-', '')
+            if len(value) != instance.acct_len:
+                raise TypeError('INVALID ACCT NUMBER')
+            value = value[:-3] + '***'
+            self.acct = value
+    acct = Acct()
+
+    class Remain:
+        def __get__(self, instance, owner):
+            return instance.retire_age - instance.age
+
+        def __set__(self, instance, value):
+            raise TypeError('cannot set remain')
+    remain = Remain()
+
+
+# test(CardHolder2)
+
+tom = CardHolder2('12345678', 'Tom', 12, 'asd')
+"""
+print(tom.__dict__)""" # {'addr': 'asd'} вычисляемые атрибуты принадлежат объекту дескриптора из-за self в дескрипторе
+# это значит что изменение атрибута в одном экземпляре изменит его в другом
+rob = CardHolder2('12345678', 'Tom', 30, 'asd')
+
+# дескриптор с хранением атрибутов для каждого клиентского класса
+# у каждого клиентского класса будет свое состояние атрибутов
+class CardHolder3:
+    acct_len = 8
+    retire_age = 59.5
+
+    def __init__(self, acct, name, age, addr):
+        self.acct = acct
+        self.name = name
+        self.age = age
+        self.addr = addr
+
+    class Name:
+        def __get__(self, instance, owner):
+            return instance.__name
+
+        def __set__(self, instance, value):
+            value = value.lower().replace(' ', '_')
+            instance.__name = value
+    name = Name()
+
+    class Age:
+        def __get__(self, instance, owner):
+            return instance.__age
+
+        def __set__(self, instance, value):
+            if 0 > value > 150:
+                raise ValueError('INVALID AGE')
+            instance.__age = value
+    age = Age()
+
+    class Acct:
+        def __get__(self, instance, owner):
+            return instance.__acct
+
+        def __set__(self, instance, value):
+            value = value.replace('-', '')
+            if len(value) != instance.acct_len:
+                raise TypeError('INVALID ACCT NUMBER')
+            value = value[:-3] + '***'
+            instance.__acct = value
+    acct = Acct()
+
+    class Remain:
+        def __get__(self, instance, owner):
+            return instance.retire_age - instance.age
+
+        def __set__(self, instance, value):
+            raise TypeError('cannot set remain')
+    remain = Remain()
+
+
+# test(CardHolder3)
+
+tom = CardHolder3('12345678', 'Tom', 12, 'asd')
+rob = CardHolder3('12345678', 'Tom', 30, 'asd')
+
+# версия с __getattr__
+
+
+class CardHolder4:
+    acct_len = 8
+    retire_age = 59.5
+
+    def __init__(self, acct, name, age, addr):
+        self.acct = acct
+        self.name = name
+        self.age = age
+        self.addr = addr
+
+    def __getattr__(self, name):
+        if name == 'acct':
+            return self._acct[:-3] + '***'
+        elif name == 'remain':
+            return self.retire_age - self.age
+        else:
+            raise AttributeError(name)
+
+    def __setattr__(self, name, value):
+        if name == 'name':
+            value = value.lower().replace(' ', '_')
+        elif name == 'age':
+            if 0 > value > 150:
+                raise ValueError('INVALID AGE')
+        elif name == 'acct':
+            name = '_acct'
+            value = value.replace('-', '')
+            if len(value) != self.acct_len:
+                raise TypeError('INVALID ACCT NUMBER')
+        elif name == 'remain':
+            raise TypeError('cannot set remain')
+
+        # obj.__setattr__(name, value)
+        self.__dict__[name] = value
+
+
+# test(CardHolder4)

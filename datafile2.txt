@@ -1,0 +1,3 @@
+y = 40
+name = 'Tom'
+dict = {'job':'dev'}

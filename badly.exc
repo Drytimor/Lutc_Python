@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/Users/dry/Lutc_python/исключения.py", line 374, in exc_4
+    inverse(0)
+  File "/Users/dry/Lutc_python/исключения.py", line 371, in inverse
+    return 1/x
+           ~^~
+ZeroDivisionError: division by zero
